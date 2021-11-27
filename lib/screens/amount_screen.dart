@@ -30,7 +30,6 @@ class _AmountScreenState extends State<AmountScreen> {
 
   @override
   void initState() {
-    
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, paymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, paymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, paymentExternal);
@@ -77,8 +76,7 @@ class _AmountScreenState extends State<AmountScreen> {
   // String emailId = Constant.email;
   paymentExternal() {}
 
-
-  payment() async{
+  payment() async {
     int amountToPay = int.parse(widget.amount) * 100;
     final client = HttpClient();
     final request =
@@ -92,23 +90,33 @@ class _AmountScreenState extends State<AmountScreen> {
     request.add(
         utf8.encode(json.encode({"amount": amountToPay, "currency": "INR"})));
     final response = await request.close();
-    
-    var options = {
-      'key': 'rzp_live_AIDprwrvRi4FNB',
-      'amount': (num.parse(widget.amount)) * 100,
-      'name': widget.title,
-      'description': widget.des,
-      'prefill': {'contact': Constant.phoneNo, 'email': Constant.email},
-      'external': {
-        "wallets": ["paytm"]
-      }
-    };
+    response.transform(utf8.decoder).listen((contents) {
+      print('ORDERID' + contents);
+      String orderId = contents.split(',')[0].split(":")[1];
+      orderId = orderId.substring(1, orderId.length - 1);
+      print("Here is the orderId: $orderId");
+      var options = {
+        'key': 'rzp_live_AIDprwrvRi4FNB',
+        'amount': amountToPay,
+        'name': widget.title,
+        "currency": "INR",
+        'description': widget.des,
+        'order_id': orderId,
+        'prefill': {
+          'contact': "",
+          'email': ""
+        },
+        'external': {
+          "wallets": ["paytm"]
+        }
+      };
 
-    try {
-      _razorpay.open(options);
-    } catch (e) {
-      print(e.toString());
-    }
+      try {
+        _razorpay.open(options);
+      } catch (e) {
+        print(e.toString());
+      }
+    });
   }
 
   @override
